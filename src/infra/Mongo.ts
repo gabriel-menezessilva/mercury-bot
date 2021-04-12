@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { mongoUri } from './../environment';
+import { mongoUri } from '../../environment';
 
 async function conectarMongoDB() {
     const client = new MongoClient(mongoUri, { useUnifiedTopology: true });

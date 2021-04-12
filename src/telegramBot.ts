@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { emoji } from 'node-emoji';
 
-import { token } from './environment';
+import { token } from '../environment';
 
 const bot = new TelegramBot(token, { polling: true });
 
