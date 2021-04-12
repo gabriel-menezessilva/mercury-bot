@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
+import puppeteer from 'puppeteer';
 
-async function doScrap() {
+export async function doScrap() {
     try {
         const browser = await puppeteer.launch({ headless: false });
 
@@ -25,48 +25,47 @@ async function doScrap() {
 
         await page.waitForSelector("#select-service > option");
 
-        const listaServices = await page.$$eval('#select-service > option', (options) => options.map(op => {
+        const listaServices = await page.$$eval('#select-service > option', (options) => options.map((op: any) => {
             return {
                 indice: op.value,
                 servico: op.textContent
             };
         }));
 
-        for (serv of listaServices) {
-            if (serv.servico === 'Test Service 01') {
+        for (let serv of listaServices) {
+            if (serv.servico === 'uno' && service) {
                 service.select(serv.indice);
             }
         }
 
         const fornecedores = await page.$('#select-provider');
 
-        const listaFornecedores = await page.$$eval('#select-provider > option', (options) => options.map(op => {
+        const listaFornecedores = await page.$$eval('#select-provider > option', (options) => options.map((op: any) => {
             return {
                 indice: op.value,
                 fornecedor: op.textContent
             };
         }));
 
-        for (forn of listaFornecedores) {
-            if (forn.fornecedor === 'Jane Doe') {
+        for (let forn of listaFornecedores) {
+            if (forn.fornecedor === 'Jane Doe' && fornecedores) {
                 fornecedores.select(forn.indice);
             }
         }
-
+        await page.waitForTimeout(1000);
         await page.click('#button-next-1');
         await page.waitForTimeout(3000);
 
         await page.screenshot({ path: './src/screens/example3.png' });
 
-        let horariosDisponiveis = await page.$$eval('#available-hours > button.btn.btn-outline-secondary.'+
-        'btn-block.shadow-none.available-hour', (options) => options.map(op => {
+        let horariosDisponiveis = await page.$$eval("#available-hours > button.btn.btn-outline-secondary.btn-block.shadow-none.available-hour", (options) => options.map((op: any) => {
             return {
-                horariosDisponivel: op.textContent,
+                horarioDisponivel: op.textContent,
                 indice: op.value
-            };
-        }));
-
-        await page.click('#available-hours > button.btn.btn-outline-secondary.btn-block.shadow-none.available-hour.selected-hour');
+            }
+        }))
+    
+        await page.click("#available-hours > button.btn.btn-outline-secondary.btn-block.shadow-none.available-hour.selected-hour");
         
         await page.click('#button-next-2');
         await page.waitForTimeout(3000);
@@ -96,5 +95,3 @@ async function doScrap() {
     }
 
 }
-
-module.exports = doScrap;

@@ -1,18 +1,17 @@
-const TelegramBot = require('node-telegram-bot-api');
-const emoji = require('node-emoji').emoji;
+import TelegramBot from 'node-telegram-bot-api';
+import { emoji } from 'node-emoji';
 
-const token = require('./environment').token;
+import { token } from './environment';
 
 const bot = new TelegramBot(token, { polling: true });
 
-const Mongo = require('./infra/Mongo');
+import { conectarMongoDB, desconectarMongoDB } from './infra/Mongo';
 
-const Scrapper = require('./scrapper');
+import { doScrap } from './scrapper';
 
 bot.onText(/\/echo (.+)/, (msg, match) => {
-
     const chatId = msg.chat.id;
-    const resp = match[1];
+    const resp = match ? match[1] : '';
 
     bot.sendMessage(chatId, resp);
 });
@@ -25,14 +24,14 @@ bot.on('message', async (msg) => {
 
     } else if (msg.text === '/subscribe') {
         try {
-            let client = await Mongo.conectarMongoDB();
+            let client = await conectarMongoDB();
             let db = client.db('MercuryBot');
             let collection = db.collection('users');
             let usuarios = await collection.find({}).toArray();
-            for (usuario of usuarios) {
+            for (let usuario of usuarios) {
                 if (chatId == usuario.telegramId) {
                     bot.sendMessage(chatId, 'Você já está inscrito para atualizações!');
-                    await Mongo.desconectarMongoDB(client);
+                    await desconectarMongoDB(client);
                     return;
                 }
             }
@@ -48,7 +47,7 @@ bot.on('message', async (msg) => {
                     return;
                 }
                 bot.sendMessage(chatId, "Inscrição realizada com sucesso!");
-                await Mongo.desconectarMongoDB(client);
+                await desconectarMongoDB(client);
             });
         } catch (e) {
             bot.sendMessage(chatId, 'Não foi possível realizar a inscrição!');
@@ -56,7 +55,7 @@ bot.on('message', async (msg) => {
         }
     } else if (msg.text === '/unsubscribe') {
         try {
-            let client = await Mongo.conectarMongoDB();
+            let client = await conectarMongoDB();
             let db = client.db('MercuryBot');
             let collection = db.collection('users');
             await collection.deleteOne({ telegramId: chatId }, async (err, resultado) => {
@@ -66,7 +65,7 @@ bot.on('message', async (msg) => {
                 } else {
                     bot.sendMessage(chatId, 'Desinscrição realizada com sucesso!');
                 }
-                await Mongo.desconectarMongoDB(client);
+                await desconectarMongoDB(client);
             });
         } catch (e) {
             bot.sendMessage(chatId, 'Erro ao desinscrever você...');
@@ -84,19 +83,19 @@ bot.on('message', async (msg) => {
 
 async function analisaSubscricoesAtualizaDados() {
 
-    let dados = await Scrapper();
+    let dados = await doScrap();
     console.log(dados)
 
     try {
-        let client = await Mongo.conectarMongoDB();
+        let client = await conectarMongoDB();
         let db = client.db('MercuryBot');
         let collection = db.collection('users');
         let usuarios = await collection.find({}).toArray();
-        for (usuario of usuarios) {
+        for (let usuario of usuarios) {
             bot.sendMessage(usuario.telegramId, JSON.stringify(dados));
         }
 
-        await Mongo.desconectarMongoDB(client);
+        await desconectarMongoDB(client);
     } catch (e) {
         console.log(e);
     }
